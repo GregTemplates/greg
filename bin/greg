@@ -1,0 +1,114 @@
+#!/usr/bin/env ruby
+puts "=" * 100
+require "pp"
+
+require "pathname"
+require "erb"
+
+module Greg
+
+  class FileTemplate
+    attr_accessor :generator
+    def create!
+      generator.inside_dir do
+        file = Pathname(destination).expand_path
+        file.dirname.mkdir unless file.dirname.exist?
+        file.write(ERB.new(contents).result)
+      end
+    end
+  end
+
+  class Generator
+    attr_reader :template_name
+    attr_reader :output_dir
+    attr_reader :force
+
+    def initialize(template_name: , output_dir: ".", force: false)
+      @template_name = template_name
+      @output_dir = Pathname(output_dir).expand_path
+
+      @force = force
+      create_directory
+      create_files
+    end
+
+    def files
+      [
+       Gemfile.new,
+       App.new(name: "TheFruit")
+      ]
+    end
+
+
+    def inside_dir(&block)
+      Dir.chdir(output_dir, &block)
+    end
+
+    private
+
+    def create_files
+      files.each do |file|
+        file.generator = self
+        file.create!
+      end
+    end
+
+    def create_directory
+      if output_dir.exist?
+        if force
+          puts "#{output_dir} exists, removing it."
+          output_dir.rmtree
+        else
+          raise "#{output_dir} already exists. If you want to overwrite it, use the 'force' option"
+        end
+      end
+
+      output_dir.mkpath
+    end
+  end
+end
+
+puts "=" * 100
+puts "*" * 100
+
+class Gemfile < Greg::FileTemplate
+  def destination
+    "Gemfile"
+  end
+
+  def contents
+    <<-EOF
+    THE GEMFILE CONTENTS"
+    EOF
+  end
+end
+
+class App < Greg::FileTemplate
+  def initialize(name:)
+    @name = name
+  end
+
+  def destination
+    "app/app.rb"
+  end
+
+  def contents
+    "THE APP <%= Time.now.day %>"
+  end
+end
+
+template_name = ARGV[0]
+
+gen = Greg::Generator.new( template_name: template_name,
+                          output_dir: "/tmp/#{template_name}/",
+                          force: true)
+
+
+p gen.template_name
+p gen.output_dir
+gen.inside_dir do
+  puts `ls -l`
+  puts `cat app/app.rb`
+end
+
+puts "*" * 100

@@ -1,0 +1,3 @@
+module Greg
+  VERSION = "0.0.1"
+end

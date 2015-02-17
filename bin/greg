@@ -17,13 +17,13 @@ module Greg
 
     def create!
       generator.inside_dir do
-        #raise Pathname(destination).expand_path.inspect
         new_dir = Pathname(destination).expand_path
         new_dir.mkdir unless new_dir.exist?
       end
     end
 
   end
+
   class FileTemplate
     attr_accessor :generator
     def create!
@@ -56,6 +56,41 @@ module Greg
     end
   end
 
+  class Gemfile < FileTemplate
+    attr_reader :gems
+
+    def initialize(*gems)
+      @gems = gems
+    end
+
+
+    def destination
+      "Gemfile"
+    end
+
+    def contents
+      @contents = []
+      @contents << 'source "https://rubygems.org"'
+      @contents << nil
+
+      @gems.each do |gem|
+        if gem.is_a?(Hash)
+          gem_name, gem_options = gem.first
+          r = []
+          r << "gem \"#{gem_name}\","
+          gem_options.each do |key, value|
+            r << "#{key.to_sym}: \"#{value.to_s}\""
+          end
+          @contents << r.join(" ")
+        else
+          @contents << "gem \"#{gem}\""
+        end
+      end
+
+      @contents.join("\n")
+    end
+  end
+
   class Generator
     attr_reader :template_name
     attr_reader :output_dir
@@ -68,16 +103,16 @@ module Greg
       @current_dir = Pathname(".").expand_path
 
       @force = force
+    end
+
+    def run
       create_directory
       create_files
+      self
     end
 
     def files
-      [
-       Gemfile.new,
-       App.new(name: "TheFruit"),
-       DirTemplate.new("public"),
-      ]
+      []
     end
 
 
@@ -119,7 +154,7 @@ class Gemfile < Greg::FileTemplate
 
   def contents
     <<-EOF
-    THE GEMFILE CONTENTS"
+    THE GEMFILE CONTENTS
     EOF
   end
 end
@@ -136,20 +171,40 @@ class App < Greg::FileTemplate
   end
 end
 
+
+class PepeGenerator < Greg::Generator
+  def files
+    [
+     Greg::Gemfile.new(:a, :b, :c, d: {version: 5}),
+     App.new(name: "TheFruit"),
+     Greg::DirTemplate.new("public"),
+    ]
+  end
+end
 template_name = ARGV[0]
 
-gen = Greg::Generator.new( template_name: template_name,
-                          output_dir: "/tmp/#{template_name}/",
-                          force: true)
+gen = PepeGenerator.new( template_name: template_name,
+                        output_dir: "/tmp/#{template_name}/",
+                        force: true).run
 
+
+def sh(command)
+  puts nil, "=== #{command} ==="
+  puts `#{command}`
+  puts "=" * (8+command.size)
+
+end
 
 p gen.template_name
 p gen.output_dir
 gen.inside_dir do
-  puts :ls, `ls -l`
-  puts :ls_app, `ls -l app/`
-  puts :ls_public, `ls -l public/`
-  puts `cat app/TheFruit.rb`
+  sh "ls -la"
+  sh "ls -la app/"
+  sh "ls -la public/"
+  sh "cat app/TheFruit.rb"
+  sh "cat Gemfile"
 end
 
 puts "*" * 100
+
+p Greg::Gemfile.new(:a).gems

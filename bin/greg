@@ -4,28 +4,68 @@ require "pp"
 
 require "pathname"
 require "erb"
+require "fattr"
 
 module Greg
+  class DirTemplate
+    attr_reader :destination
+    attr_accessor :generator
 
+    def initialize(destination)
+      @destination = destination
+    end
+
+    def create!
+      generator.inside_dir do
+        #raise Pathname(destination).expand_path.inspect
+        new_dir = Pathname(destination).expand_path
+        new_dir.mkdir unless new_dir.exist?
+      end
+    end
+
+  end
   class FileTemplate
     attr_accessor :generator
     def create!
       generator.inside_dir do
-        file = Pathname(destination).expand_path
-        file.dirname.mkdir unless file.dirname.exist?
-        file.write(ERB.new(contents).result)
+        current_file = Pathname(destination).expand_path
+        current_file.dirname.mkdir unless current_file.dirname.exist?
+        current_file.write(contents)
       end
+    end
+
+    private
+
+    def initialize(**attrs)
+      attrs.each do |attr, value|
+        send attr, value
+      end
+    end
+
+    def self.attribute(attr)
+      fattr attr
+    end
+    private_class_method :attribute
+
+    def template(file)
+      Pathname(generator.current_dir + file).expand_path.read
+    end
+
+    def erb(str)
+      ERB.new(str).result(instance_eval { binding })
     end
   end
 
   class Generator
     attr_reader :template_name
     attr_reader :output_dir
+    attr_reader :current_dir
     attr_reader :force
 
     def initialize(template_name: , output_dir: ".", force: false)
       @template_name = template_name
       @output_dir = Pathname(output_dir).expand_path
+      @current_dir = Pathname(".").expand_path
 
       @force = force
       create_directory
@@ -35,7 +75,8 @@ module Greg
     def files
       [
        Gemfile.new,
-       App.new(name: "TheFruit")
+       App.new(name: "TheFruit"),
+       DirTemplate.new("public"),
       ]
     end
 
@@ -84,16 +125,14 @@ class Gemfile < Greg::FileTemplate
 end
 
 class App < Greg::FileTemplate
-  def initialize(name:)
-    @name = name
-  end
+  attribute :name
 
   def destination
-    "app/app.rb"
+    "app/#{name}.rb"
   end
 
   def contents
-    "THE APP <%= Time.now.day %>"
+    erb(template("hola.rb"))
   end
 end
 
@@ -107,8 +146,10 @@ gen = Greg::Generator.new( template_name: template_name,
 p gen.template_name
 p gen.output_dir
 gen.inside_dir do
-  puts `ls -l`
-  puts `cat app/app.rb`
+  puts :ls, `ls -l`
+  puts :ls_app, `ls -l app/`
+  puts :ls_public, `ls -l public/`
+  puts `cat app/TheFruit.rb`
 end
 
 puts "*" * 100

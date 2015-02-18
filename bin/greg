@@ -1,10 +1,8 @@
 #!/usr/bin/env ruby
-puts "=" * 100
-require "pp"
-
 require "pathname"
 require "erb"
 require "fattr"
+require "colin"
 
 module Greg
   def self.generator(**options)
@@ -13,7 +11,12 @@ module Greg
 
   def self.get_generator(name:, template_name: , output_dir: ".", force: false)
     generator_name = "#{template_name}_generator"
-    require Greg.templates_dir + "/#{template_name}/#{generator_name}"
+    template = Greg.templates_dir + "/#{template_name}/#{generator_name}"
+    if Pathname(template + ".rb").exist?
+      require template.to_s
+    else
+      raise UnexistingTemplateError.new(template_name)
+    end
     generator_class_name = generator_name.split("_").map(&:capitalize).join
     generator_class = Kernel.const_get(generator_class_name)
     generator_class.new(name: name,
@@ -22,8 +25,22 @@ module Greg
                         force: force)
   end
 
+  class UnexistingTemplateError < Exception
+    attr_reader :template
+    def initialize(template)
+      @template = template
+    end
+  end
+
+  class ExistingProjectError < Exception
+    attr_reader :dir
+    def initialize(dir)
+      @dir = dir
+    end
+  end
+
   def self.templates_dir
-    @templates_dir ||= Pathname("~/.templates").expand_path.to_s
+    @templates_dir ||= Pathname("~/.greg_templates").expand_path.to_s
   end
 
   def self.templates_dir=(new_dir)
@@ -165,7 +182,7 @@ module Greg
           puts "#{output_dir} exists, removing it."
           output_dir.rmtree
         else
-          raise "#{output_dir} already exists. If you want to overwrite it, use the 'force' option"
+          raise ExistingProjectError.new(output_dir)
         end
       end
 
@@ -175,28 +192,57 @@ module Greg
 
 end
 
-puts "=" * 100
-puts "*" * 100
+options = Colin::Parser.new(ARGV).named_options([:name, :template_name]).options
 
-name = ARGV[0]
-template_name = ARGV[1]
+if options[:h] || options[:help]
+  usage = <<-EOF
+Usage:
+  greg <project-name> <template-name> [options]
 
-Greg.templates_dir = "~/code/sandbox/greg_templates/"
-gen = Greg.generator(name: name,
-                     template_name: template_name,
-                     force: true).run
-def sh(command)
-  puts nil, "=== #{command} ==="
-  puts `#{command}`
-  puts "=" * (8+command.size)
+Options:
+  --force                    Force creation of project directory (if it already exists, it will be overwriten).
+  --output_directory         Select where the new project will be located (current directory by default).
+  --templates_dir            Select the source location for templates (~/.greg_templates by default)
+  EOF
+
+  puts usage
+  exit(0)
 end
 
-# gen.inside_dir do
-#   sh "ls -la"
-#   sh "ls -la app/"
-#   sh "ls -la public/"
-#   sh "cat app/TheFruit.rb"
-#   sh "cat Gemfile"
-# end
+begin
+  Greg.templates_dir = options.delete(:templates_dir) || "~/code/sandbox/greg_templates/"
 
-puts "*" * 100
+  gen = Greg.generator(options).run
+
+  def sh(command)
+    puts nil, "=== #{command} ==="
+    puts `#{command}`
+    puts "=" * (8+command.size)
+  end
+
+  gen.inside_dir do
+    sh "ls -la"
+    sh "ls -la app/"
+    sh "ls -la public/"
+    sh "cat app/TheFruit.rb"
+    sh "cat Gemfile"
+  end
+
+rescue Greg::UnexistingTemplateError => e
+  error = <<-EOF
+Error:
+  "#{e.template}" template doesn't exist.
+  EOF
+  puts error
+
+  exit(1)
+rescue Greg::ExistingProjectError => e
+  error = <<-EOF
+Error:
+  "#{e.dir}" already exists.
+  If you want to overwrite it, use the '--force' option.
+  EOF
+  puts error
+
+  exit(1)
+end

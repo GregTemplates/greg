@@ -7,6 +7,29 @@ require "erb"
 require "fattr"
 
 module Greg
+  def self.generator(**options)
+    @generator ||= get_generator(**options)
+  end
+
+  def self.get_generator(name:, template_name: , output_dir: ".", force: false)
+    generator_name = "#{template_name}_generator"
+    require Greg.templates_dir + "/#{template_name}/#{generator_name}"
+    generator_class_name = generator_name.split("_").map(&:capitalize).join
+    generator_class = Kernel.const_get(generator_class_name)
+    generator_class.new(name: name,
+                        template_name: template_name,
+                        output_dir: output_dir,
+                        force: force)
+  end
+
+  def self.templates_dir
+    @templates_dir ||= Pathname("~/.templates").expand_path.to_s
+  end
+
+  def self.templates_dir=(new_dir)
+    @templates_dir = Pathname(new_dir).expand_path.to_s
+  end
+
   class DirTemplate
     attr_reader :destination
     attr_accessor :generator
@@ -48,7 +71,7 @@ module Greg
     private_class_method :attribute
 
     def template(file)
-      Pathname(generator.current_dir + file).expand_path.read
+      Pathname(generator.template_dir + "/" + file).expand_path.read
     end
 
     def erb(str)
@@ -77,11 +100,11 @@ module Greg
         if gem.is_a?(Hash)
           gem_name, gem_options = gem.first
           r = []
-          r << "gem \"#{gem_name}\","
+          r << "gem \"#{gem_name}\""
           gem_options.each do |key, value|
             r << "#{key.to_sym}: \"#{value.to_s}\""
           end
-          @contents << r.join(" ")
+          @contents << r.join(", ")
         else
           @contents << "gem \"#{gem}\""
         end
@@ -92,14 +115,17 @@ module Greg
   end
 
   class Generator
+    attr_reader :name
     attr_reader :template_name
+    attr_reader :template_path
     attr_reader :output_dir
     attr_reader :current_dir
     attr_reader :force
+    attr_reader :generator
 
-    def initialize(template_name: , output_dir: ".", force: false)
+    def initialize(name:, template_name: , output_dir: ".", force: false)
       @template_name = template_name
-      @output_dir = Pathname(output_dir).expand_path
+      @output_dir = Pathname(output_dir + "/" + name).expand_path
       @current_dir = Pathname(".").expand_path
 
       @force = force
@@ -118,6 +144,10 @@ module Greg
 
     def inside_dir(&block)
       Dir.chdir(output_dir, &block)
+    end
+
+    def template_dir
+      Pathname(Greg.templates_dir + "/" +  template_name).expand_path.to_s
     end
 
     private
@@ -142,69 +172,31 @@ module Greg
       output_dir.mkpath
     end
   end
+
 end
 
 puts "=" * 100
 puts "*" * 100
 
-class Gemfile < Greg::FileTemplate
-  def destination
-    "Gemfile"
-  end
+name = ARGV[0]
+template_name = ARGV[1]
 
-  def contents
-    <<-EOF
-    THE GEMFILE CONTENTS
-    EOF
-  end
-end
-
-class App < Greg::FileTemplate
-  attribute :name
-
-  def destination
-    "app/#{name}.rb"
-  end
-
-  def contents
-    erb(template("hola.rb"))
-  end
-end
-
-
-class PepeGenerator < Greg::Generator
-  def files
-    [
-     Greg::Gemfile.new(:a, :b, :c, d: {version: 5}),
-     App.new(name: "TheFruit"),
-     Greg::DirTemplate.new("public"),
-    ]
-  end
-end
-template_name = ARGV[0]
-
-gen = PepeGenerator.new( template_name: template_name,
-                        output_dir: "/tmp/#{template_name}/",
-                        force: true).run
-
-
+Greg.templates_dir = "~/code/sandbox/greg_templates/"
+gen = Greg.generator(name: name,
+                     template_name: template_name,
+                     force: true).run
 def sh(command)
   puts nil, "=== #{command} ==="
   puts `#{command}`
   puts "=" * (8+command.size)
-
 end
 
-p gen.template_name
-p gen.output_dir
-gen.inside_dir do
-  sh "ls -la"
-  sh "ls -la app/"
-  sh "ls -la public/"
-  sh "cat app/TheFruit.rb"
-  sh "cat Gemfile"
-end
+# gen.inside_dir do
+#   sh "ls -la"
+#   sh "ls -la app/"
+#   sh "ls -la public/"
+#   sh "cat app/TheFruit.rb"
+#   sh "cat Gemfile"
+# end
 
 puts "*" * 100
-
-p Greg::Gemfile.new(:a).gems

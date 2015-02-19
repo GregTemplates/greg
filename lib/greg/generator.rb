@@ -9,6 +9,7 @@ module Greg
     attr_reader :generator
 
     def initialize(name:, template_name: , output_directory: ".", force: false)
+      @name = name
       @template_name = template_name
       @output_directory = Pathname(output_directory + "/" + name).expand_path
       @current_dir = Pathname(".").expand_path
@@ -39,8 +40,7 @@ module Greg
     def create_files
       puts "Creating Project:"
       files.each do |file|
-        file.generator = self
-        puts "  [create] ./#{file.destination}"
+        puts "  [create] ./#{file}"
         file.create!
       end
     end

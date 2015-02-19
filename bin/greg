@@ -33,9 +33,10 @@ end
 begin
   require "greg"
 
-  Greg.templates_dir = options.delete(:templates_dir) || "~/code/sandbox/greg_templates/"
+  templates_dir = options.delete(:templates_dir)
+  Greg.templates_dir = templates_dir if templates_dir
 
-  gen = Greg.generator(options).run
+  gen = Greg.generator(**options).run
 
   def sh(command)
     puts nil, "=== #{command} ==="

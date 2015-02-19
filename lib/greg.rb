@@ -6,8 +6,11 @@ require "fattr"
 require "greg/generator"
 require "greg/exceptions"
 
+require "greg/default_template"
+
 require "greg/file_template"
 require "greg/dir_template"
+require "greg/from_template"
 
 require "greg/gemfile_template"
 
@@ -16,7 +19,8 @@ module Greg
     @generator ||= get_generator(**options)
   end
 
-  def self.get_generator(name:, template_name: , output_directory: ".", force: false)
+  def self.get_generator(**options) #name:, template_name: , output_directory: ".", force: false)
+    template_name = options[:template_name]
     generator_name = "#{template_name}_generator"
     template = Greg.templates_dir + "/#{template_name}/#{generator_name}"
     if Pathname(template + ".rb").exist?
@@ -26,11 +30,7 @@ module Greg
     end
     generator_class_name = generator_name.split("_").map(&:capitalize).join
     generator_class = Kernel.const_get(generator_class_name)
-    generator_class.new( name: name,
-                        template_name: template_name,
-                        output_directory: output_directory,
-                        force: force
-                       )
+    generator_class.new( **options )
   end
 
   def self.templates_dir

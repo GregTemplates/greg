@@ -1,8 +1,6 @@
 module Greg
-  class DirTemplate
+  class DirTemplate < DefaultTemplate
     attr_reader :destination
-    attr_accessor :generator
-
     def initialize(destination)
       @destination = destination
     end
@@ -12,6 +10,10 @@ module Greg
         new_dir = Pathname(destination).expand_path
         new_dir.mkdir unless new_dir.exist?
       end
+    end
+
+    def to_s
+      "#{destination}/"
     end
   end
 end

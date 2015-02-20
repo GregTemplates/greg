@@ -5,3 +5,5 @@ require "greg/templates/from_template"
 
 require "greg/templates/gemfile_template"
 
+require "greg/templates/file_tree_template"
+

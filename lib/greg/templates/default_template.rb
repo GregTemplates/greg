@@ -1,10 +1,10 @@
 module Greg
   class DefaultTemplate
-    def template_name
+    def app_name
       generator.name
     end
 
-    def template_class_name
+    def app_class_name
       @template_class_name ||= generator.name.split("_").map(&:capitalize).join
     end
 

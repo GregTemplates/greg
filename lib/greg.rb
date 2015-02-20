@@ -6,13 +6,7 @@ require "fattr"
 require "greg/generator"
 require "greg/exceptions"
 
-require "greg/default_template"
-
-require "greg/file_template"
-require "greg/dir_template"
-require "greg/from_template"
-
-require "greg/gemfile_template"
+require "greg/templates"
 
 module Greg
   def self.generator(**options)

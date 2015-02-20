@@ -7,5 +7,9 @@ module Greg
       @destination = destination
       @contents = erb( template(template) )
     end
+
+    def msg
+      "    [create] #{destination}"
+    end
   end
 end

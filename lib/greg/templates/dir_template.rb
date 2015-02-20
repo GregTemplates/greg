@@ -12,8 +12,8 @@ module Greg
       end
     end
 
-    def to_s
-      "#{destination}/"
+    def msg
+      "    [create] #{destination}/"
     end
   end
 end

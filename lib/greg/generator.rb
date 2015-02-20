@@ -40,7 +40,7 @@ module Greg
     def create_files
       puts "Creating Project:"
       files.each do |file|
-        puts "  [create] ./#{file}"
+        puts file.msg if file.msg
         file.create!
       end
     end

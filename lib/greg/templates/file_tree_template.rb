@@ -7,12 +7,18 @@ module Greg
       @templates ||= templates
     end
 
-    def each(&block)
-      puts "+" * 50
-      iterate_tree(templates, &block)
-      puts "+" * 50
+    #def each(&block)
+    def create!
+      iterate_tree(templates) do |entry|
+        puts entry.msg if entry.msg
+        entry.create!
+      end
     end
 
+    def msg
+      nil
+    end
+    
     private
     def iterate_tree(dir=".", path, &block)
       current_relative_path = Pathname([path, dir].join("/")).cleanpath

@@ -19,13 +19,16 @@ module Greg
       output_path = Pathname(current_relative_path.to_s.gsub(/\A#{templates}/, ".")).cleanpath
 
       current_path = Pathname([
-                    Greg.templates_dir,
-                    Greg.generator.template_name,
-                    current_relative_path
-                   ].join("/"))
+                               Greg.templates_dir,
+                               Greg.generator.template_name,
+                               current_relative_path
+                              ].join("/"))
 
       (Dir.new(current_path).entries - [".", ".."]).each do |entry|
-        destination = (output_path + entry).cleanpath.to_s
+        new_name = entry.
+          gsub("@APP_NAME@", Greg.generator.name).
+          gsub("@TEMPLATE_NAME@", Greg.generator.template_name)
+        destination = (output_path + new_name).cleanpath.to_s
         if (current_path + entry).directory?
           block.call(DirTemplate.new(destination))
           iterate_tree(entry, current_relative_path, &block)

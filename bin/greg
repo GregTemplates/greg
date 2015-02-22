@@ -3,14 +3,15 @@ $:.unshift(File.expand_path("../../lib", __FILE__))
 
 require "colin"
 
-options = Colin::Parser.new(ARGV).named_options([:name, :template_name]).options
+options = Colin::Parser.new(ARGV).named_options([:name]).options
 
 if options[:h] || options[:help]
   usage = <<-EOF
 Usage:
-  greg <project-name> <template-name> [options]
+  greg <project-name> [options]
 
 Options:
+  --template                 Template to use
   --force                    Force creation of project directory (if it already exists, it will be overwriten).
   --output-directory         Select where the new project will be located (current directory by default).
   --templates-dir            Select the source location for templates (~/.greg_templates by default)
@@ -36,6 +37,8 @@ begin
   templates_dir = options.delete(:templates_dir)
   Greg.templates_dir = templates_dir if templates_dir
 
+  options[:template_name] = options.delete(:template)
+
   gen = Greg.generator(**options).run
 
   def sh(command)
@@ -45,7 +48,7 @@ begin
   end
 
   # gen.inside_dir do
-  #   sh "ls -la"
+  # sh "ls -la"
   #   sh "ls -la app/"
   #   sh "ls -la public/"
   #   sh "cat app/TheFruit.rb"

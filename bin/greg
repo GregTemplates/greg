@@ -19,13 +19,42 @@ Options:
 Installing a template
   greg --install=<template-name> [--path=<template-path>]
   greg -i <template-name> [--path=<template-path>]
-  EOF
 
+Listing templates
+  greg --list
+  EOF
   puts usage
   exit(0)
 end
 
 require "greg"
+
+if options[:list]
+  require "json"
+
+  installed_templates = `ls #{Greg.templates_dir}`.split("\n")
+  remote_templates = begin
+                       JSON.parse(`curl https://api.github.com/orgs/GregTemplates/repos`).map {|i|i["name"]}
+                     rescue
+                       []
+                     end
+
+
+  available_templates = remote_templates - ["greg", *installed_templates]
+
+  puts available_templates
+  msg = []
+  msg << "Installed templates:"
+  msg << installed_templates.map { |l| "  * #{l}" }
+  msg << ""
+  if available_templates.any?
+    msg << "Available templates:"
+    msg << available_templates.map { |l| "  * #{l}" }
+  end
+  puts msg.join("\n")
+
+  exit(0)
+end
 
 if options[:i] || options[:install]
   i = options.delete(:install)

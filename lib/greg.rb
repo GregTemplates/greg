@@ -13,6 +13,15 @@ module Greg
     @generator ||= get_generator(**options)
   end
 
+  def self.templates_dir
+    @templates_dir ||= Pathname("~/.greg_templates").expand_path.to_s
+  end
+
+  def self.templates_dir=(new_dir)
+    @templates_dir = Pathname(new_dir).expand_path.to_s
+  end
+
+  private
   def self.get_generator(**options) #name:, template_name: , output_directory: ".", force: false)
     template_name = options[:template_name]
     generator_name = "#{template_name}_generator"
@@ -25,14 +34,6 @@ module Greg
     generator_class_name = generator_name.split("_").map(&:capitalize).join
     generator_class = Kernel.const_get(generator_class_name)
     generator_class.new( **options )
-  end
-
-  def self.templates_dir
-    @templates_dir ||= Pathname("~/.greg_templates").expand_path.to_s
-  end
-
-  def self.templates_dir=(new_dir)
-    @templates_dir = Pathname(new_dir).expand_path.to_s
   end
 
 end

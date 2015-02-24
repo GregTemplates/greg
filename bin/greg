@@ -25,14 +25,19 @@ Installing a template
   exit(0)
 end
 
+require "greg"
+
 if options[:i] || options[:install]
+  i = options.delete(:install)
+  i ||= options.delete(:i)
+  options[:template] ||= i
   require "greg/template_installer"
-  installer = Greg::TemplateInstaller.new(options).install
+  installer = Greg::TemplateInstaller.new(**options).install
+
   exit(0)
 end
 
 begin
-  require "greg"
 
   templates_dir = options.delete(:templates_dir)
   Greg.templates_dir = templates_dir if templates_dir

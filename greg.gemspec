@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Federico Iachetti"]
   spec.email         = ["iachetti.federico@gmail.com"]
   spec.summary       = %q{Simple generator.}
-  spec.description   = %q{Simple generator.}
+  spec.description   = %q{Simple code generator.}
   spec.homepage      = "https://github.com/iachettifederico/greg"
   spec.license       = "MIT"
 

@@ -53,7 +53,7 @@ To get a list of templates you can use the `--list` flag
 
     $ greg --list
 
-To install a template (mus be listed under "Available templates" on the `--list`):
+To install a template (must be listed under "Available templates" on the `--list`):
 
     $ greg --install=<template name>
 
@@ -84,7 +84,7 @@ class MyTemplateGenerator < Greg::Generator
 end
 ```
 
-And under `~/.greg_templates/my_template/templates/` put all the template files. This will compy the `templates` subdirectory almost verbatim to the generated application.
+And under `~/.greg_templates/my_template/templates/` put all the template files. This will copy the `templates` subdirectory almost verbatim to the generated application.
 
 Notice I said "almost verbatim" and that's because we have an ace under our sleeves.
 Normally, we want to name files with some name different than just 'app.rb' or 'my_app.whatever'. In that case, instead of naming the file like that, you can use the `@APP_NAME@` "variable".

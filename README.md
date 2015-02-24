@@ -61,6 +61,66 @@ For example:
 
     $ greg --install=roda_app
 
+## Creating you own template
+
+The first thing you probably want to do is get some boilerplate in place:
+
+    $ greg my_template --template=template
+
+This will create a new directory called `my_template` under `~/.greg_templates/`.
+Inside, you'll find the `my_template_generator.rb` file. That's where all the logic for the generator goes.
+
+Now you just need to define a method called `#files`, which should return an array containing all the needed files to be created.
+
+The easiest way to get started is using `Greg::FileTreeTemplate`, like this:
+
+```ruby
+class MyTemplateGenerator < Greg::Generator
+  def files
+    [
+     Greg::FileTreeTemplate.new("templates"),
+    ]
+  end
+end
+```
+
+And under `~/.greg_templates/my_template/templates/` put all the template files. This will compy the `templates` subdirectory almost verbatim to the generated application.
+
+Notice I said "almost verbatim" and that's because we have an ace under our sleeves.
+Normally, we want to name files with some name different than just 'app.rb' or 'my_app.whatever'. In that case, instead of naming the file like that, you can use the `@APP_NAME@` "variable".
+If you have the following tree:
+
+```
+~/.greg_templates/foo/templates/
+├── @APP_NAME@.rb
+└── spec
+    ├── @APP_NAME@_spec.rb
+    ├── @TEMPLATE_NAME@_spec.rb
+    └── spec_helper.rb
+```
+
+When you run
+
+    $ greg my_cool_app --template=foo
+
+the resulting tree will be:
+
+```
+~/.greg_templates/foo/templates/
+├── my_cool_app.rb
+└── spec
+    ├── my_cool_app_spec.rb
+    ├── foo_spec.rb
+    └── spec_helper.rb
+```
+
+You also have some variables to use inside the file contents. The files will be rendered using ERB and you have the following methods available:
+(assuming the app name is again `my_cool_app`)
+
+| variable      | exported value |
+| ------------- |:--------------:| 
+| app_name      | my_cool_app    | 
+| app_clas_name | MyCoolApp      | 
 
 ## Installation
 

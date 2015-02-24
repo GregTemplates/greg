@@ -7,7 +7,6 @@ module Greg
       @templates ||= templates
     end
 
-    #def each(&block)
     def create!
       iterate_tree(templates) do |entry|
         puts entry.msg if entry.msg

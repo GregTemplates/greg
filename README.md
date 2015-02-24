@@ -92,11 +92,11 @@ If you have the following tree:
 
 ```
 ~/.greg_templates/foo/templates/
-├── @APP_NAME@.rb
-└── spec
-    ├── @APP_NAME@_spec.rb
-    ├── @TEMPLATE_NAME@_spec.rb
-    └── spec_helper.rb
+  ├── @APP_NAME@.rb
+  └── spec
+      ├── @APP_NAME@_spec.rb
+      ├── @TEMPLATE_NAME@_spec.rb
+      └── spec_helper.rb
 ```
 
 When you run
@@ -107,11 +107,11 @@ the resulting tree will be:
 
 ```
 ~/.greg_templates/foo/templates/
-├── my_cool_app.rb
-└── spec
-    ├── my_cool_app_spec.rb
-    ├── foo_spec.rb
-    └── spec_helper.rb
+  ├── my_cool_app.rb
+  └── spec
+      ├── my_cool_app_spec.rb
+      ├── foo_spec.rb
+      └── spec_helper.rb
 ```
 
 You also have some variables to use inside the file contents. The files will be rendered using ERB and you have the following methods available:

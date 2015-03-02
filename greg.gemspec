@@ -23,5 +23,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "matest", "~> 1.5.6"
   
   spec.add_runtime_dependency "fattr"
-  spec.add_runtime_dependency "colin", "~> 0.1.6"
+  spec.add_runtime_dependency "colin", "~> 0.1.7"
 end

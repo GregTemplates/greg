@@ -3,7 +3,7 @@ $:.unshift(File.expand_path("../../lib", __FILE__))
 
 require "colin"
 
-options = Colin::Parser.new(ARGV).named_options([:name]).options
+options = Colin::Parser.new(ARGV).named_options(:name).options
 
 if options[:h] || options[:help]
   usage = <<-EOF

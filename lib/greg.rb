@@ -14,7 +14,7 @@ module Greg
   end
 
   def self.templates_dir
-    @templates_dir ||= Pathname("~/.greg_templates").expand_path.to_s
+    @templates_dir ||= ENV['os'] == "Windows_NT" ? Pathname("~/.greg_templates").expand_path.to_s.gsub(File::SEPARATOR, File::ALT_SEPARATOR || File::SEPARATOR) : Pathname("~/.greg_templates").expand_path.to_s
   end
 
   def self.templates_dir=(new_dir)

@@ -3,7 +3,7 @@ $:.unshift(File.expand_path("../../lib", __FILE__))
 
 require "colin"
 
-options = Colin::Parser.new(ARGV).named_options(:name).options
+options = Colin::Parser.new(ARGV).named_options([:name]).options
 
 if options[:h] || options[:help]
   usage = <<-EOF
@@ -32,7 +32,7 @@ require "greg"
 if options[:list]
   require "json"
 
-  installed_templates = `ls #{Greg.templates_dir}`.split("\n")
+  ENV['os'] == "Windows_NT" ? installed_templates = `dir #{Greg.templates_dir}`.split("\n") : installed_templates = `ls #{Greg.templates_dir}`.split("\n")
   remote_templates = begin
                        JSON.parse(`curl https://api.github.com/orgs/GregTemplates/repos`).map {|i|i["name"]}
                      rescue
